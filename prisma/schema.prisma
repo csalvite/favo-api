@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Category {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @db.VarChar
+  slug       String?  @unique @db.VarChar
+  parent_id  String?  @db.Uuid
+  icon       String?
+  color      String?  @db.VarChar
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  Task       Task[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Media {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id     String?   @db.Uuid
+  url         String
+  type        String?   @db.VarChar(20)
+  uploaded_at DateTime? @default(now()) @db.Timestamptz(6)
+  Task        Task?     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Message {
+  id                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id                        String?   @db.Uuid
+  sender_id                      String?   @db.Uuid
+  receiver_id                    String?   @db.Uuid
+  text                           String
+  sent_at                        DateTime? @default(now()) @db.Timestamptz(6)
+  read                           Boolean?  @default(false)
+  User_Message_receiver_idToUser User?     @relation("Message_receiver_idToUser", fields: [receiver_id], references: [id], onUpdate: NoAction)
+  User_Message_sender_idToUser   User?     @relation("Message_sender_idToUser", fields: [sender_id], references: [id], onUpdate: NoAction)
+  Task                           Task?     @relation(fields: [task_id], references: [id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Notification {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  content    String?
+  type       String?   @db.VarChar(20)
+  read       Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  User       User?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Proposal {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  message    String?
+  price      Decimal  @db.Decimal
+  status     String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  Status     Status   @relation(fields: [status], references: [id], onDelete: Cascade)
+  Task       Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  User       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Report {
+  id                                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reported_user_id                   String?   @db.Uuid
+  reporter_user_id                   String?   @db.Uuid
+  task_id                            String?   @db.Uuid
+  reason                             String?
+  created_at                         DateTime? @default(now()) @db.Timestamptz(6)
+  User_Report_reported_user_idToUser User?     @relation("Report_reported_user_idToUser", fields: [reported_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  User_Report_reporter_user_idToUser User?     @relation("Report_reporter_user_idToUser", fields: [reporter_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Task                               Task?     @relation(fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Review {
+  id                             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id                        String   @db.Uuid
+  from_user_id                   String   @db.Uuid
+  to_user_id                     String   @db.Uuid
+  rating                         Int      @db.SmallInt
+  comment                        String?
+  created_at                     DateTime @default(now()) @db.Timestamptz(6)
+  User_Review_from_user_idToUser User     @relation("Review_from_user_idToUser", fields: [from_user_id], references: [id], onDelete: Cascade)
+  Task                           Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  User_Review_to_user_idToUser   User     @relation("Review_to_user_idToUser", fields: [to_user_id], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Status {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String?    @db.VarChar
+  description String?
+  Proposal    Proposal[]
+  Task        Task[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Task {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String?         @db.VarChar
+  description    String?
+  category_id    String?         @db.Uuid
+  status_id      String?         @db.Uuid
+  date           DateTime?       @db.Timestamp(6)
+  price          Decimal?        @db.Decimal
+  creator_id     String?         @db.Uuid
+  address_id     String?         @db.Uuid
+  lat            Float?
+  lon            Float?
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  Media          Media[]
+  Message        Message[]
+  Proposal       Proposal[]
+  Report         Report[]
+  Review         Review[]
+  UserAddress    UserAddress?    @relation(fields: [address_id], references: [id], onDelete: Cascade)
+  Category       Category?       @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  User           User?           @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  Status         Status?         @relation(fields: [status_id], references: [id], onDelete: Cascade)
+  TaskAssignment TaskAssignment?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model TaskAssignment {
+  id                                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id                               String   @unique @db.Uuid
+  user_id                               String   @db.Uuid
+  assigned_at                           String   @db.Uuid
+  price                                 Decimal? @db.Decimal
+  message                               String?
+  created_at                            DateTime @default(now()) @db.Timestamptz(6)
+  User_TaskAssignment_assigned_atToUser User     @relation("TaskAssignment_assigned_atToUser", fields: [assigned_at], references: [id], onDelete: NoAction)
+  Task                                  Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  User_TaskAssignment_user_idToUser     User     @relation("TaskAssignment_user_idToUser", fields: [user_id], references: [id], onDelete: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model User {
+  id                                              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                            String           @db.VarChar
+  email                                           String           @unique @db.VarChar
+  password_hash                                   String           @db.VarChar
+  phone                                           String?          @db.VarChar
+  avatar                                          String?          @db.VarChar
+  is_verified                                     Boolean?         @default(false)
+  bio                                             String?
+  role                                            String?          @default("user") @db.VarChar
+  created_at                                      DateTime         @default(now()) @db.Timestamptz(6)
+  average_rating                                  Decimal?         @default(0) @db.Decimal(3, 2)
+  review_count                                    Int?             @default(0)
+  Message_Message_receiver_idToUser               Message[]        @relation("Message_receiver_idToUser")
+  Message_Message_sender_idToUser                 Message[]        @relation("Message_sender_idToUser")
+  Notification                                    Notification[]
+  Proposal                                        Proposal[]
+  Report_Report_reported_user_idToUser            Report[]         @relation("Report_reported_user_idToUser")
+  Report_Report_reporter_user_idToUser            Report[]         @relation("Report_reporter_user_idToUser")
+  Review_Review_from_user_idToUser                Review[]         @relation("Review_from_user_idToUser")
+  Review_Review_to_user_idToUser                  Review[]         @relation("Review_to_user_idToUser")
+  Task                                            Task[]
+  TaskAssignment_TaskAssignment_assigned_atToUser TaskAssignment[] @relation("TaskAssignment_assigned_atToUser")
+  TaskAssignment_TaskAssignment_user_idToUser     TaskAssignment[] @relation("TaskAssignment_user_idToUser")
+  UserAddress                                     UserAddress[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserAddress {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?  @db.Uuid
+  street      String?
+  postal_code String?  @db.VarChar
+  city        String?  @db.VarChar
+  province    String?  @db.VarChar
+  country     String?  @db.VarChar
+  lat         Float?   @default(0)
+  lon         Float?   @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  Task        Task[]
+  User        User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
