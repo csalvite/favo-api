@@ -1,4 +1,4 @@
-<h2?>Using Node v20.13.1</h2>
+<h2>API created using NestJS and Node v20.13.1</h2>
 
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
@@ -30,8 +30,20 @@
 
 ## Installation
 
+Copy paste ".env.example" file as ".env" and use your own enviroment variables.
+
 ```bash
 $ npm install
+```
+
+### Generate prisma
+
+```bash
+$ npx prisma db pull
+```
+
+```bash
+$ npx prisma generate
 ```
 
 ## Running the app
