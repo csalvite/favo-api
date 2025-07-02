@@ -15,7 +15,20 @@ import { MediaModule } from './media/media.module';
 import { ReportsModule } from './reports/reports.module';
 
 @Module({
-  imports: [UsersModule, UserAddressesModule, CategoriesModule, TasksModule, StatusModule, ProposalsModule, AssignmentsModule, MessagesModule, ReviewsModule, NotificationsModule, MediaModule, ReportsModule],
+  imports: [
+    UsersModule,
+    UserAddressesModule,
+    CategoriesModule,
+    TasksModule,
+    StatusModule,
+    ProposalsModule,
+    AssignmentsModule,
+    MessagesModule,
+    ReviewsModule,
+    NotificationsModule,
+    MediaModule,
+    ReportsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

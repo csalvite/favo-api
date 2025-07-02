@@ -1,11 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { ResponseService } from 'src/common/responses/response.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly responseService: ResponseService,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      // Transform DTO to DB object ready to insert
+      const userToSave = await this.mapDtoToDb(createUserDto);
+
+      const newUser = await this.prisma.user.create({ data: userToSave });
+
+      return this.responseService.success('User created successfully', newUser);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          // Unique constraint failed
+          throw new BadRequestException('Email already exists.');
+        }
+      }
+      throw new InternalServerErrorException('Unexpected error.');
+    }
+  }
+
+  private async mapDtoToDb(dto: CreateUserDto) {
+    return {
+      name: dto.name.trim(),
+      email: dto.email.toLowerCase().trim(),
+      password_hash: await this.hashPassword(dto.password),
+      phone: dto.phone,
+      bio: dto.bio?.trim() ?? null,
+      role: 'user',
+      is_verified: false,
+      created_at: new Date(),
+    };
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(10);
+    return bcrypt.hash(password, salt);
   }
 
   findAll() {
