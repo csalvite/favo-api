@@ -10,6 +10,8 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ResponseService } from 'src/common/responses/response.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { hashPassword } from 'src/utils/crypto.util';
+import { mapDtoToDb } from 'src/utils/users.util';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +23,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     try {
       // Transform DTO to DB object ready to insert
-      const userToSave = await this.mapDtoToDb(createUserDto);
+      const userToSave = await mapDtoToDb(createUserDto);
 
       const newUser = await this.prisma.user.create({ data: userToSave });
 
@@ -35,24 +37,6 @@ export class UsersService {
       }
       throw new InternalServerErrorException('Unexpected error.');
     }
-  }
-
-  private async mapDtoToDb(dto: CreateUserDto) {
-    return {
-      name: dto.name.trim(),
-      email: dto.email.toLowerCase().trim(),
-      password_hash: await this.hashPassword(dto.password),
-      phone: dto.phone,
-      bio: dto.bio?.trim() ?? null,
-      role: 'user',
-      is_verified: false,
-      created_at: new Date(),
-    };
-  }
-
-  private async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(10);
-    return bcrypt.hash(password, salt);
   }
 
   findAll() {
@@ -71,11 +55,70 @@ export class UsersService {
     }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      // Check if user exists
+      const user = await this.prisma.user.findUnique({
+        where: { id: id },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found.');
+      }
+
+      // Prepare update object
+      const updateData: any = {};
+
+      if (updateUserDto.name) {
+        updateData.name = updateUserDto.name.trim();
+      }
+
+      if (updateUserDto.email) {
+        updateData.email = updateUserDto.email.toLowerCase().trim();
+      }
+
+      if (updateUserDto.password) {
+        updateData.password_hash = await hashPassword(updateUserDto.password);
+      }
+
+      if (updateUserDto.phone) {
+        updateData.phone = updateUserDto.phone;
+      }
+
+      if (updateUserDto.bio) {
+        updateData.bio = updateUserDto.bio.trim();
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        throw new BadRequestException('No data provided for update.');
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: { id: id },
+        data: updateData,
+      });
+
+      const { password_hash, ...safeUser } = updatedUser;
+
+      return this.responseService.success(
+        'User updated successfully',
+        safeUser,
+      );
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('Email already exists.');
+        }
+        if (error.code === 'P2025') {
+          throw new NotFoundException('User not found.');
+        }
+      }
+      console.error(error);
+      throw new InternalServerErrorException('Unexpected error.');
+    }
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} user`;
   }
 
