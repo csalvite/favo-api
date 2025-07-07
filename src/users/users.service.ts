@@ -118,8 +118,37 @@ export class UsersService {
     }
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: id },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found.');
+      }
+
+      if (!user.active) {
+        throw new BadRequestException('User is already inactive.');
+      }
+
+      const deletedUser = await this.prisma.user.update({
+        where: { id: id },
+        data: { active: false },
+      });
+
+      return this.responseService.success(
+        'User deleted succesfully',
+        deletedUser,
+      );
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('User not found.');
+        }
+      }
+      throw new InternalServerErrorException('Unexpected error.');
+    }
   }
 
   login({ email, password }: { email: string; password: string }) {

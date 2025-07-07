@@ -160,6 +160,7 @@ model User {
   created_at                                      DateTime         @default(now()) @db.Timestamptz(6)
   average_rating                                  Decimal?         @default(0) @db.Decimal(3, 2)
   review_count                                    Int?             @default(0)
+  active                                          Boolean?         @default(true)
   Message_Message_receiver_idToUser               Message[]        @relation("Message_receiver_idToUser")
   Message_Message_sender_idToUser                 Message[]        @relation("Message_sender_idToUser")
   Notification                                    Notification[]
