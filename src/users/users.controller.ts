@@ -40,7 +40,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User found.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    return this.usersService.findOne(id);
   }
 
   // PATCH /users/:id - Update a user by ID

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -58,8 +59,16 @@ export class UsersService {
     return `This action returns all users`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: id },
+      });
+
+      return this.responseService.success('Returned user succesfully', user);
+    } catch (error) {
+      throw new NotFoundException('User not found.');
+    }
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
