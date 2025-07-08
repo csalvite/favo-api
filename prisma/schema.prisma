@@ -177,16 +177,16 @@ model User {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UserAddress {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String?  @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?   @db.Uuid
   street      String?
-  postal_code String?  @db.VarChar
-  city        String?  @db.VarChar
-  province    String?  @db.VarChar
-  country     String?  @db.VarChar
-  lat         Float?   @default(0)
-  lon         Float?   @default(0)
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  postal_code String?   @db.VarChar
+  city        String?   @db.VarChar
+  province    String?   @db.VarChar
+  country     String?   @db.VarChar
+  lat         Float?    @default(0)
+  lon         Float?    @default(0)
+  created_at  DateTime? @db.Timestamptz(6)
   Task        Task[]
-  User        User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  User        User?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
