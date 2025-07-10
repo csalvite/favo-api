@@ -113,7 +113,6 @@ export class UsersService {
           throw new NotFoundException('User not found.');
         }
       }
-      console.error(error);
       throw new InternalServerErrorException('Unexpected error.');
     }
   }

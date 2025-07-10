@@ -42,7 +42,7 @@ export class UserAddressesController {
   @ApiResponse({ status: 200, description: 'User address found.' })
   @ApiResponse({ status: 404, description: 'User address not found.' })
   findOne(@Param('userId') userId: string) {
-    return this.userAddressesService.findOne(+userId);
+    return this.userAddressesService.findUserAddresses(userId);
   }
 
   // PATCH /user-addresses/:id - Update a user address
@@ -58,7 +58,7 @@ export class UserAddressesController {
     @Param('id') id: string,
     @Body() updateUserAddressDto: UpdateUserAddressDto,
   ) {
-    return this.userAddressesService.update(+id, updateUserAddressDto);
+    return this.userAddressesService.update(id, updateUserAddressDto);
   }
 
   // DELETE /user-addresses/:id - Delete a user address
@@ -71,6 +71,6 @@ export class UserAddressesController {
   })
   @ApiResponse({ status: 404, description: 'User address not found.' })
   remove(@Param('id') id: string) {
-    return this.userAddressesService.remove(+id);
+    return this.userAddressesService.remove(id);
   }
 }

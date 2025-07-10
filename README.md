@@ -1,4 +1,5 @@
 <h2>API created using NestJS and Node v20.13.1</h2>
+<h3>Code mostly done by AI: Anxiety and Insomnia</h3>
 
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
