@@ -1,26 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { CreateStatusDto } from './dto/create-status.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { ResponseService } from 'src/common/responses/response.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class StatusService {
-  create(createStatusDto: CreateStatusDto) {
-    return 'This action adds a new status';
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly responseService: ResponseService,
+  ) {}
 
-  findAll() {
-    return `This action returns all status`;
-  }
+  async findAll() {
+    try {
+      const status = await this.prisma.status.findMany();
 
-  findOne(id: number) {
-    return `This action returns a #${id} status`;
-  }
+      if (!status || status.length === 0) {
+        throw new NotFoundException('Statuses not found.');
+      }
 
-  update(id: number, updateStatusDto: UpdateStatusDto) {
-    return `This action updates a #${id} status`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} status`;
+      return this.responseService.success(
+        'Statuses retrieved successfully',
+        status,
+      );
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Statuses not found.');
+        }
+      }
+      throw new InternalServerErrorException('Unexpected error.');
+    }
   }
 }
